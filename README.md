@@ -286,6 +286,6 @@ spring.mail.properties.mail.smtp.starttls.enable=true
     - 时间格式是2018-11-10T14:11:00，即yyyy-MM-ddTHH:mm:ss，时间必须大于当前时间(这样才会安排发邮件的作业被执行)
     - 时区，我这里选择的是Asia/Shanghai，根据你当前的时区选择即可
     - 使用postman具体发送：
-       https://raw.githubusercontent.com/duyanhan1995/Spring-Boot-Quartz-Scheduler-Example/master/src/main/resources/postmanTestScheduleEmail.png
+       ![avatar](https://raw.githubusercontent.com/duyanhan1995/Spring-Boot-Quartz-Scheduler-Example/master/src/main/resources/postmanTestScheduleEmail.png)
     - 邮箱成功接收：
-       https://raw.githubusercontent.com/duyanhan1995/Spring-Boot-Quartz-Scheduler-Example/master/src/main/resources/postmanTestScheduleEmailSuccess.png
+       ![avatar](https://raw.githubusercontent.com/duyanhan1995/Spring-Boot-Quartz-Scheduler-Example/master/src/main/resources/postmanTestScheduleEmailSuccess.png)
