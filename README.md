@@ -58,164 +58,22 @@ spring.mail.properties.mail.smtp.starttls.enable=true
  
  ### 创建类
   - 创建用于控制器中 “scheduleEmail”这个API的请求和响应(有效负载)的DTO类。 ->简单说就是装传输数据的类
-    ```java
-    /**
-    *  ScheduleEmailRequest   装scheduleEmailAPI的请求数据类
-    */
-    package com.example.quartzdemo.payload;
-    
-    import javax.validation.constraints.Email;
-    import javax.validation.constraints.NotEmpty;
-    import javax.validation.constraints.NotNull;
-    import java.time.LocalDateTime;
-    import java.time.ZoneId;
-    
-    public class ScheduleEmailRequest {
-        @Email
-        @NotEmpty
-        private String email;
-    
-        @NotEmpty
-        private String subject;
-    
-        @NotEmpty
-        private String body;
-    
-        @NotNull
-        private LocalDateTime dateTime;
-    
-        @NotNull
-        private ZoneId timeZone;
-        
-        // Getters and Setters (Omitted for brevity)
-    }
-    ```
-    ```java
-    /**
-    *  ScheduleEmailResponse   装scheduleEmailAPI的响应数据类
-    */
-    package com.example.quartzdemo.payload;
-    
-    import com.fasterxml.jackson.annotation.JsonInclude;
-    
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public class ScheduleEmailResponse {
-        private boolean success;
-        private String jobId;
-        private String jobGroup;
-        private String message;
-    
-        public ScheduleEmailResponse(boolean success, String message) {
-            this.success = success;
-            this.message = message;
-        }
-    
-        public ScheduleEmailResponse(boolean success, String jobId, String jobGroup, String message) {
-            this.success = success;
-            this.jobId = jobId;
-            this.jobGroup = jobGroup;
-            this.message = message;
-        }
-    
-        // Getters and Setters (Omitted for brevity)
-    }
-    ```
-    ```java
-    /**
-    * EmailJobSchedulerController  用于定义调度邮件任务的scheduleEmail的API接口，以及定义构建作业实例和触发器示例的方法
-    */
-    package com.example.quartzdemo.controller;
-    
-    import com.example.quartzdemo.job.EmailJob;
-    import com.example.quartzdemo.payload.ScheduleEmailRequest;
-    import com.example.quartzdemo.payload.ScheduleEmailResponse;
-    import org.quartz.*;
-    import org.slf4j.Logger;
-    import org.slf4j.LoggerFactory;
-    import org.springframework.beans.factory.annotation.Autowired;
-    import org.springframework.http.HttpStatus;
-    import org.springframework.http.ResponseEntity;
-    import org.springframework.web.bind.annotation.PostMapping;
-    import org.springframework.web.bind.annotation.RequestBody;
-    import org.springframework.web.bind.annotation.RestController;
-    
-    import javax.validation.Valid;
-    import java.time.ZonedDateTime;
-    import java.util.Date;
-    import java.util.UUID;
-    
-    @RestController
-    public class EmailJobSchedulerController {
-        private static final Logger logger = LoggerFactory.getLogger(EmailJobSchedulerController.class);
-    
-        @Autowired
-        private Scheduler scheduler;
-    
-        @PostMapping("/scheduleEmail")
-        public ResponseEntity<ScheduleEmailResponse> scheduleEmail(@Valid @RequestBody ScheduleEmailRequest scheduleEmailRequest) {
-            try {
-                ZonedDateTime dateTime = ZonedDateTime.of(scheduleEmailRequest.getDateTime(), scheduleEmailRequest.getTimeZone());
-                if(dateTime.isBefore(ZonedDateTime.now())) {
-                    ScheduleEmailResponse scheduleEmailResponse = new ScheduleEmailResponse(false,
-                            "dateTime must be after current time");
-                    return ResponseEntity.badRequest().body(scheduleEmailResponse);
-                }
-    
-                JobDetail jobDetail = buildJobDetail(scheduleEmailRequest);
-                Trigger trigger = buildJobTrigger(jobDetail, dateTime);
-                scheduler.scheduleJob(jobDetail, trigger);
-    
-                ScheduleEmailResponse scheduleEmailResponse = new ScheduleEmailResponse(true,
-                        jobDetail.getKey().getName(), jobDetail.getKey().getGroup(), "Email Scheduled Successfully!");
-                return ResponseEntity.ok(scheduleEmailResponse);
-            } catch (SchedulerException ex) {
-                logger.error("Error scheduling email", ex);
-    
-                ScheduleEmailResponse scheduleEmailResponse = new ScheduleEmailResponse(false,
-                        "Error scheduling email. Please try later!");
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(scheduleEmailResponse);
-            }
-        }
-    
-        private JobDetail buildJobDetail(ScheduleEmailRequest scheduleEmailRequest) {
-            JobDataMap jobDataMap = new JobDataMap();
-    
-            jobDataMap.put("email", scheduleEmailRequest.getEmail());
-            jobDataMap.put("subject", scheduleEmailRequest.getSubject());
-            jobDataMap.put("body", scheduleEmailRequest.getBody());
-    
-            return JobBuilder.newJob(EmailJob.class)
-                    .withIdentity(UUID.randomUUID().toString(), "email-jobs")
-                    .withDescription("Send Email Job")
-                    .usingJobData(jobDataMap)
-                    .storeDurably()
-                    .build();
-        }
-    
-        private Trigger buildJobTrigger(JobDetail jobDetail, ZonedDateTime startAt) {
-            return TriggerBuilder.newTrigger()
-                    .forJob(jobDetail)
-                    .withIdentity(jobDetail.getKey().getName(), "email-triggers")
-                    .withDescription("Send Email Trigger")
-                    .startAt(Date.from(startAt.toInstant()))
-                    .withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionFireNow())
-                    .build();
-        }
-    }
-    ```
-   - Spring Boot内置了对Quartz的支持。它会自动创建一个Quartz的Schedulerbean，其中包含我们在application.properties文件中提供的配置。这就是我们可以直接注入Scheduler控制器的原因。
+     - 创建 ScheduleEmailRequest   装scheduleEmailAPI的请求数据类
+     - 创建 ScheduleEmailResponse   装scheduleEmailAPI的响应数据类
+     - 创建 EmailJobSchedulerController  用于定义调度邮件任务的scheduleEmail的API接口，以及定义构建作业实例和触发器示例的方法
+  - Spring Boot内置了对Quartz的支持。它会自动创建一个Quartz的Schedulerbean，其中包含我们在application.properties文件中提供的配置。这就是我们可以直接注入Scheduler控制器的原因。
    
-   - 在/scheduleEmail这个API中，
+  - 在/scheduleEmail这个API中，
    
-   - 我们首先验证请求正文（即发送一个ScheduleEmailRequest对象去请求调度邮件发送作业）
+  - 我们首先验证请求正文（即发送一个ScheduleEmailRequest对象去请求调度邮件发送作业）
    
-   - 然后，使用包含收件人电子邮件，主题和正文的JobDataMap(这些信息都来自我们的请求正文)构建JobDetail实例。在JobDetail我们创建的类型的EmailJob。我们将EmailJob在下一节中定义。
+  - 然后，使用包含收件人电子邮件，主题和正文的JobDataMap(这些信息都来自我们的请求正文)构建JobDetail实例。在JobDetail我们创建的类型的EmailJob。我们将EmailJob在下一节中定义。
    
-   - 接下来，我们构建一个Trigger(触发器)实例，该实例定义何时应该执行Job。
+  - 接下来，我们构建一个Trigger(触发器)实例，该实例定义何时应该执行Job。
    
-   - 最后，我们使用scheduler.scheduleJob()的API 安排这个Job(作业或任务) 。
+  - 最后，我们使用scheduler.scheduleJob()的API 安排这个Job(作业或任务) 。
    
-   - 创建作业
+  - 创建作业
      - Spring Boot提供了一个名为Quartz Scheduler的Job接口的包装器QuartzJobBean
      - 所以只需要定义一个作业类去实现这个包装器即可
      - 创建一个EmailJob类
