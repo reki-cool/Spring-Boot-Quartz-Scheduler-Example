@@ -45,8 +45,8 @@ spring.mail.properties.mail.smtp.starttls.enable=true
 
 ### 数据库配置
  - 创建一个名为quartz_demo的数据库，数据库的用户名和密码为root/123456
- - 下载quartz_demo.sql脚本，链接：https://github.com/duyanhan1995/Spring-Boot-Quartz-Scheduler-Example/blob/master/src/main/resources/quartz_tables.sql
- - 切换到quartz_demo数据库，使用"source quartz_demo.sql脚本路径"方式导入quartz_demo.sql脚本，创建相关表
+ - [下载quartz_demo.sql脚本](https://github.com/duyanhan1995/Spring-Boot-Quartz-Scheduler-Example/blob/master/src/main/resources/quartz_tables.sql)
+ - 切换到quartz_demo数据库，使用```source <quartz_demo.sql脚本路径>```命令导入quartz_demo.sql脚本，创建相关表
 
 ### Quartz Scheduler的API和术语概述
  - Scheduler：把它理解为“安排”，它用于安排增加删除“作业(任务)”和“触发器”及两者间的关系
@@ -68,11 +68,8 @@ spring.mail.properties.mail.smtp.starttls.enable=true
    
 ### 工作流程
   - 我们首先验证请求正文（即向**/scheduleEmail**这个接口发送一个ScheduleEmailRequest对象去请求调度邮件发送作业）
-   
   - 然后，使用包含收件人电子邮件，主题和正文的JobDataMap(这些信息都来自我们的请求正文)构建JobDetail实例。在JobDetail我们创建的类型的EmailJob。我们将EmailJob在下一节中定义。
-   
   - 接下来，我们构建一个Trigger(触发器)实例，该实例定义何时应该执行Job。
-   
   - 最后，我们使用scheduler.scheduleJob()的API 安排这个Job(作业或任务) 。
  
 ### 运行和测试
