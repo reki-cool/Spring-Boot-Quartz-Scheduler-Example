@@ -67,10 +67,10 @@ spring.mail.properties.mail.smtp.starttls.enable=true
         - 所以只需要定义一个作业类去实现这个包装器即可
    
 ### 工作流程
-  - 我们首先验证请求正文（即向**/scheduleEmail**这个接口发送一个ScheduleEmailRequest对象去请求调度邮件发送作业）
-  - 然后，使用包含收件人电子邮件，主题和正文的JobDataMap(这些信息都来自我们的请求正文)构建JobDetail实例。在JobDetail我们创建的类型的EmailJob。我们将EmailJob在下一节中定义。
-  - 接下来，我们构建一个Trigger(触发器)实例，该实例定义何时应该执行Job。
-  - 最后，我们使用scheduler.scheduleJob()的API 安排这个Job(作业或任务) 。
+  - 先验证请求正文，即向```/scheduleEmail```这个接口发送一个ScheduleEmailRequest对象去请求调度邮件发送作业
+  - 使用收件人电子邮件，主题和正文的JobDataMap这些信息(都来自我们的请求正文)构建JobDetail实例。
+  - 构建一个Trigger(触发器(计划))实例，该实例定义何时应该执行Job。
+  - scheduler调度(安排对象)的scheduleJob()方法安排这个Job作业(任务)按照Trigger触发器(计划)执行 。
  
 ### 运行和测试
  - 在idea的Terminal控制台输入命令```java mvn spring-boot:run```
