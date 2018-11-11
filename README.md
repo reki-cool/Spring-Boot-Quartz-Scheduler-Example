@@ -12,12 +12,12 @@
 ### 目录结构预览
  - com.example.quartzdemo
      - controller // 控制器
-         - EmailJobSchedulerController // Email作业的调度控制器
+         - [EmailJobSchedulerController](https://github.com/duyanhan1995/Spring-Boot-Quartz-Scheduler-Example/blob/master/src/main/java/com/example/quartzdemo/controller/EmailJobSchedulerController.java) // Email作业的调度控制器
      - job // 作业类包
-         - EmailJob // Email发送类
+         - [EmailJob](https://github.com/duyanhan1995/Spring-Boot-Quartz-Scheduler-Example/blob/master/src/main/java/com/example/quartzdemo/job/EmailJob.java) // Email发送类
      - payload // 有效负载类（DTO类）包
-         - ScheduleEmailRequest     // 调度Email的请求类
-         - ScheduleEmailResponse    // 调度Email的响应类
+         - [ScheduleEmailRequest](https://github.com/duyanhan1995/Spring-Boot-Quartz-Scheduler-Example/blob/master/src/main/java/com/example/quartzdemo/payload/ScheduleEmailRequest.java)     // 调度Email的请求类
+         - [ScheduleEmailResponse](https://github.com/duyanhan1995/Spring-Boot-Quartz-Scheduler-Example/blob/master/src/main/java/com/example/quartzdemo/payload/ScheduleEmailResponse.java)    // 调度Email的响应类
          
 ### 写配置文件
 ```properties
@@ -56,86 +56,25 @@ spring.mail.properties.mail.smtp.starttls.enable=true
  - JobBuilder：用于构建JobDetail实例的构建器
  - TriggerBuilder：用于构建Trigger实例的构建器
  
- ### 创建类
+### 创建类
   - 创建用于控制器中 “scheduleEmail”这个API的请求和响应(有效负载)的DTO类。 ->简单说就是装传输数据的类
      - 创建 ScheduleEmailRequest   装scheduleEmailAPI的请求数据类
      - 创建 ScheduleEmailResponse   装scheduleEmailAPI的响应数据类
      - 创建 EmailJobSchedulerController  用于定义调度邮件任务的scheduleEmail的API接口，以及定义构建作业实例和触发器示例的方法
-  - Spring Boot内置了对Quartz的支持。它会自动创建一个Quartz的Schedulerbean，其中包含我们在application.properties文件中提供的配置。这就是我们可以直接注入Scheduler控制器的原因。
+        - Spring Boot内置了对Quartz的支持。它会自动创建一个Quartz的Schedulerbean，其中包含我们在application.properties文件中提供的配置。这就是我们可以直接注入Scheduler控制器的原因。
+     - 创建 EmailJob 用于实际发送Email的作业类
+        - Spring Boot提供了一个名为Quartz Scheduler的Job接口的包装器QuartzJobBean
+        - 所以只需要定义一个作业类去实现这个包装器即可
    
-  - 在/scheduleEmail这个API中，
-   
-  - 我们首先验证请求正文（即发送一个ScheduleEmailRequest对象去请求调度邮件发送作业）
+### 工作流程
+  - 我们首先验证请求正文（即向**/scheduleEmail**这个接口发送一个ScheduleEmailRequest对象去请求调度邮件发送作业）
    
   - 然后，使用包含收件人电子邮件，主题和正文的JobDataMap(这些信息都来自我们的请求正文)构建JobDetail实例。在JobDetail我们创建的类型的EmailJob。我们将EmailJob在下一节中定义。
    
   - 接下来，我们构建一个Trigger(触发器)实例，该实例定义何时应该执行Job。
    
   - 最后，我们使用scheduler.scheduleJob()的API 安排这个Job(作业或任务) 。
-   
-  - 创建作业
-     - Spring Boot提供了一个名为Quartz Scheduler的Job接口的包装器QuartzJobBean
-     - 所以只需要定义一个作业类去实现这个包装器即可
-     - 创建一个EmailJob类
-        ```java
-        package com.example.quartzdemo.job;
-        
-        import org.quartz.JobDataMap;
-        import org.quartz.JobExecutionContext;
-        import org.quartz.JobExecutionException;
-        import org.slf4j.Logger;
-        import org.slf4j.LoggerFactory;
-        import org.springframework.beans.factory.annotation.Autowired;
-        import org.springframework.boot.autoconfigure.mail.MailProperties;
-        import org.springframework.mail.javamail.JavaMailSender;
-        import org.springframework.mail.javamail.MimeMessageHelper;
-        import org.springframework.scheduling.quartz.QuartzJobBean;
-        import org.springframework.stereotype.Component;
-        
-        import javax.mail.MessagingException;
-        import javax.mail.internet.MimeMessage;
-        import java.nio.charset.StandardCharsets;
-        
-        @Component
-        public class EmailJob extends QuartzJobBean {
-            private static final Logger logger = LoggerFactory.getLogger(EmailJob.class);
-        
-            @Autowired
-            private JavaMailSender mailSender;
-        
-            @Autowired
-            private MailProperties mailProperties;
-            
-            @Override
-            protected void executeInternal(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-                logger.info("Executing Job with key {}", jobExecutionContext.getJobDetail().getKey());
-        
-                JobDataMap jobDataMap = jobExecutionContext.getMergedJobDataMap();
-                String subject = jobDataMap.getString("subject");
-                String body = jobDataMap.getString("body");
-                String recipientEmail = jobDataMap.getString("email");
-        
-                sendMail(mailProperties.getUsername(), recipientEmail, subject, body);
-            }
-        
-            private void sendMail(String fromEmail, String toEmail, String subject, String body) {
-                try {
-                    logger.info("Sending Email to {}", toEmail);
-                    MimeMessage message = mailSender.createMimeMessage();
-        
-                    MimeMessageHelper messageHelper = new MimeMessageHelper(message, StandardCharsets.UTF_8.toString());
-                    messageHelper.setSubject(subject);
-                    messageHelper.setText(body, true);
-                    messageHelper.setFrom(fromEmail);
-                    messageHelper.setTo(toEmail);
-        
-                    mailSender.send(message);
-                } catch (MessagingException ex) {
-                    logger.error("Failed to send email to {}", toEmail);
-                }
-            }
-        }
-        ```
+ 
 ### 运行和测试
  - 在idea的Terminal控制台输入命令```java mvn spring-boot:run```
  - 如果不在配置文件中指定密码，在控制台中指定密码，则输入命令```java  -Dspring.mail.password=<YOUR_SMTP_PASSWORD>```
